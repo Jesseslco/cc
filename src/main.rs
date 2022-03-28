@@ -3,8 +3,20 @@ mod encrypt;
 #[allow(unused_imports)]
 use encrypt::encrypt_file;
 use clap::Parser;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs;
+use uuid::Uuid;
+
+
+fn get_uuid4() -> String {
+    let uuid = Uuid::new_v4();
+    return uuid.to_string();
+}
+
+fn get_node_tree_path(top_tree_path: &Path, node_path: &Path) -> Result<(String, PathBuf)> {
+    let tree_name = top_tree_path.file_name()?.to_str()?.to_owned();
+
+}
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
