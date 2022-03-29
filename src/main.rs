@@ -80,6 +80,8 @@ fn main() {
 
     println!("{:?}", all_files);
 
+    // for every file, encrypt it in to blob, then save it to dst_path
+
     // // read file
     // let content = fs::read(&src_path).unwrap();
     // let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);

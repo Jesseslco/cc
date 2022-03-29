@@ -1,4 +1,7 @@
-pub fn encode_node_metadata(node_path: String) -> Vec<u8> {
+use std::path::PathBuf;
+use std::fs;
+
+pub fn encode_node_metadata(node_path: &str) -> Vec<u8> {
     let mut result: Vec<u8> = Vec::new();
     let mut node_path_bytes = node_path.as_bytes().to_vec();
 
@@ -10,7 +13,7 @@ pub fn encode_node_metadata(node_path: String) -> Vec<u8> {
 }
 // use rot-13 algorithm
 // node path should be based on the src directory
-pub fn encrypt_file(node_path: String, file_content: Vec<u8>) -> Vec<u8> {
+pub fn encrypt_file(node_path: &str, file_content: Vec<u8>) -> Vec<u8> {
     let mut metadata = encode_node_metadata(node_path);
     let mut content = file_content;
     metadata.append(&mut content);
@@ -29,11 +32,10 @@ pub fn encrypt_file(node_path: String, file_content: Vec<u8>) -> Vec<u8> {
         }
     }
     return packed_content;
+}
 
-    // let mut new_file_content = Vec::new();
-    // new_file_content.append(&mut new_content);
-    // let mut new_node_path = node_path;
-    // new_node_path.push_str(".rot13");
-    // let mut new_file = File::create(new_node_path).unwrap();
-    // new_file.write_all(&new_file_content).unwrap();
+fn encode_to_blob(file_path: PathBuf) -> Vec<u8> {
+    let file_content: Vec<u8> = fs::read(&file_path).unwrap();
+    let encrypted_blob = encrypt_file(file_path.to_str().unwrap(), file_content);
+    return encrypted_blob;
 }
