@@ -13,7 +13,8 @@ pub fn encode_node_metadata(node_path: String) -> Vec<u8> {
 pub fn encrypt_file(node_path: String, file_content: Vec<u8>) -> Vec<u8> {
     let mut metadata = encode_node_metadata(node_path);
     let mut content = file_content;
-    let mut packed_content = metadata.append(&mut content);
+    metadata.append(&mut content);
+    let mut packed_content = metadata;
     for c in packed_content.iter_mut() {
         if *c >= b'a' && *c <= b'z' {
             *c = *c + 13;
