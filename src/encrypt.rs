@@ -1,11 +1,20 @@
+pub fn encode_node_metadata(node_path: String) -> Vec<u8> {
+    let mut result: Vec<u8> = Vec::new();
+    let mut node_path_bytes = node_path.as_bytes().to_vec();
 
-
+    let metadata_bytes_length: u8 = node_path_bytes.len() as u8;
+    result.push(metadata_bytes_length);
+    result.append(&mut node_path_bytes);
+    return result;
+    
+}
 // use rot-13 algorithm
 // node path should be based on the src directory
 pub fn encrypt_file(node_path: String, file_content: Vec<u8>) -> Vec<u8> {
-    let mut info_prefix = node_path.as_bytes().to_vec();
+    let mut metadata = encode_node_metadata(node_path);
     let mut content = file_content;
-    for c in content.iter_mut() {
+    let mut packed_content = metadata.append(&mut content);
+    for c in packed_content.iter_mut() {
         if *c >= b'a' && *c <= b'z' {
             *c = *c + 13;
             if *c > b'z' {
@@ -18,8 +27,7 @@ pub fn encrypt_file(node_path: String, file_content: Vec<u8>) -> Vec<u8> {
             }
         }
     }
-    info_prefix.append(&mut content);
-    return info_prefix;
+    return packed_content;
 
     // let mut new_file_content = Vec::new();
     // new_file_content.append(&mut new_content);

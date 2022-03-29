@@ -1,10 +1,15 @@
 #[allow(dead_code)]
 mod encrypt;
+mod utils;
 #[allow(unused_imports)]
 use encrypt::encrypt_file;
+#[allow(unused_imports)]
+use utils::get_node_path;
 use clap::Parser;
+use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::fs;
+use std::sync::Arc;
 use uuid::Uuid;
 
 
@@ -13,9 +18,9 @@ fn get_uuid4() -> String {
     return uuid.to_string();
 }
 
-fn get_node_tree_path(top_tree_path: &Path, node_path: &Path) -> Result<(String, PathBuf)> {
-    let tree_name = top_tree_path.file_name()?.to_str()?.to_owned();
-
+fn get_node_tree_path(top_tree_path: &Path, node_path: &Path) -> Result<(), Arc<dyn Error>> {
+    // let tree_name = top_tree_path.file_name().expect("failed to file name").to_str().expect("failed").to_owned();
+    Ok(())
 }
 
 #[derive(Parser, Debug)]
@@ -31,12 +36,12 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let src_file_or_directory_path = Path::new(&args.src);
+    let src_path = Path::new(&args.src);
     let dst_path = Path::new(&args.dst);
 
 
-    // validate src_file_or_directory_path
-    if !src_file_or_directory_path.exists() {
+    // validate src_directory_path
+    if !src_path.exists() {
         println!("Source file or directory does not exist");
         return;
     } 
@@ -50,13 +55,33 @@ fn main() {
         return;
     }
 
-    if src_file_or_directory_path.is_file() {
-        // read file
-        let content = fs::read(src_file_or_directory_path).unwrap();
-        let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);
-        println!("{:?}", encrypt_content);
+    if !src_path.is_dir() {
+        println!("Source path is not a directory");
+        return;
     }
 
-        
-    
+    // read file
+    let content = fs::read(src_path).unwrap();
+    let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);
+
+    // create target folder
+    let target_dir_path = dst_path.join(src_path.file_name().unwrap());
+    if target_dir_path.exists() {
+        println!("Target directory already exists");
+        return;
+    } else {
+        fs::create_dir(target_dir_path).unwrap();
+    }
+
+    // create metafile dir
+    let metafile_dir = dst_path.join(".meta");
+    if metafile_dir.exists() {
+        println!("Metafile directory already exists");
+        return;
+    } else {
+        fs::create_dir(metafile_dir).unwrap();
+    }
+
+    // if meta
+    // write content to file
 }
