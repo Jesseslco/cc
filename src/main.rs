@@ -1,21 +1,18 @@
 #[allow(dead_code)]
 mod encrypt;
-mod utils;
-#[allow(unused_imports)]
-use encrypt::encrypt_file;
-#[allow(unused_imports)]
-use utils::get_node_path;
 use clap::Parser;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs;
 use uuid::Uuid;
 
 
+#[allow(dead_code)]
 fn get_uuid4() -> String {
     let uuid = Uuid::new_v4();
     return uuid.to_string();
 }
 
+#[allow(dead_code)]
 fn get_node_tree_path(top_tree_path: &Path, node_path: &Path) -> Option<String>{
     let top_tree_path_str = top_tree_path.to_str().unwrap();
     let node_path_str = node_path.to_str().unwrap();
@@ -77,29 +74,33 @@ fn main() {
         return;
     }
 
-    let related_path: String = get_node_path(root_abs_path, node_abs_path)
+    // let related_path: String = get_node_path(root_abs_path, node_abs_path)
+    let all_files: Vec<PathBuf> = Vec::new();
+    let all_files: Vec<PathBuf> = list_dir(&src_path, all_files);
 
-    // read file
-    let content = fs::read(&src_path).unwrap();
-    let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);
+    println!("{:?}", all_files);
 
-    // create target folder
-    let target_dir_path = dst_path.join(&src_path.file_name().unwrap());
-    if target_dir_path.exists() {
-        println!("Target directory already exists");
-        return;
-    } else {
-        fs::create_dir(target_dir_path).unwrap();
-    }
+    // // read file
+    // let content = fs::read(&src_path).unwrap();
+    // let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);
 
-    // create metafile dir
-    let metafile_dir = dst_path.join(".meta");
-    if metafile_dir.exists() {
-        println!("Metafile directory already exists");
-        return;
-    } else {
-        fs::create_dir(metafile_dir).unwrap();
-    }
+    // // create target folder
+    // let target_dir_path = dst_path.join(&src_path.file_name().unwrap());
+    // if target_dir_path.exists() {
+    //     println!("Target directory already exists");
+    //     return;
+    // } else {
+    //     fs::create_dir(target_dir_path).unwrap();
+    // }
+
+    // // create metafile dir
+    // let metafile_dir = dst_path.join(".meta");
+    // if metafile_dir.exists() {
+    //     println!("Metafile directory already exists");
+    //     return;
+    // } else {
+    //     fs::create_dir(metafile_dir).unwrap();
+    // }
 
     // if meta
     // write content to file
@@ -107,15 +108,17 @@ fn main() {
 
 
 // get file or directory path recrusively from a path
-fn list_dir(src: &Path, results: Vec<PathBuf>): Vec<PathBuf> {
+fn list_dir(src: &Path, mut results: Vec<PathBuf>) -> Vec<PathBuf> {
     if src.is_dir() {
         for entry in fs::read_dir(src).unwrap() {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.is_dir() {
-                list_dir(&path);
+                results = list_dir(&path, results);
             } else {
-                println!("{:?}", path);
+                // add new path to vec
+                println!("{:?}", &path);
+                results.push(path);
             }
         }
     }
