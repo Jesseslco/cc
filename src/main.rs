@@ -117,7 +117,7 @@ fn list_dir(src: &Path, mut results: Vec<PathBuf>) -> Vec<PathBuf> {
                 results = list_dir(&path, results);
             } else {
                 // add new path to vec
-                println!("{:?}", &path);
+                // println!("{:?}", &path);
                 results.push(path);
             }
         }
