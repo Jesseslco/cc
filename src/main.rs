@@ -1,8 +1,9 @@
 #[allow(dead_code)]
 mod encrypt;
+use encrypt::encode_to_blob;
 use clap::Parser;
 use std::path::{Path, PathBuf};
-use std::fs;
+use std::fs::{self, File};
 use uuid::Uuid;
 
 
@@ -74,11 +75,40 @@ fn main() {
         return;
     }
 
-    // let related_path: String = get_node_path(root_abs_path, node_abs_path)
-    let all_files: Vec<PathBuf> = Vec::new();
-    let all_files: Vec<PathBuf> = list_dir(&src_path, all_files);
+    // get all file recursively in src directory
+    let files_in_directory: Vec<PathBuf> = Vec::new();
+    let files_in_directory: Vec<PathBuf> = list_dir(&src_path, files_in_directory);
 
-    println!("{:?}", all_files);
+    println!("num of files: {}", files_in_directory.len());
+
+    if files_in_directory.len() == 0 {
+        println!("No files found in source directory");
+        return;
+    }
+
+
+    // create target directory
+    let target_dir_path = dst_path.join(src_path.file_name().unwrap());
+    if target_dir_path.exists() {
+        println!("Target directory already exists");
+        return;
+    } else {
+        fs::create_dir(&target_dir_path).expect("failed to create target directory");
+    }
+    // create .meta directory
+    let meta_dir_path = target_dir_path.join(".meta");
+    if meta_dir_path.exists() {
+        println!("Meta directory already exists");
+        return;
+    } else {
+        fs::create_dir(&meta_dir_path).expect("failed to create meta directory");
+    }
+
+    for file_path in files_in_directory.iter() {
+        let file_blob = encode_to_blob(file_path);
+        println!("file_blob: {:?}", file_path);
+    }
+
 
     // for every file, encrypt it in to blob, then save it to dst_path
 
