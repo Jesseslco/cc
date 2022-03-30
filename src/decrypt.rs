@@ -3,7 +3,25 @@ use std::str;
 use std::path::Path;
 
 fn rot_13_decode(content: Vec<u8>) -> Vec<u8> {
-   return content; 
+    let mut result: Vec<u8> = Vec::new();
+    for c in content.iter() {
+        if *c >= b'a' && *c <= b'z' {
+            let mut new_c = *c - 13;
+            if new_c < b'a' {
+                new_c = new_c + 26;
+            }
+            result.push(new_c);
+        } else if *c >= b'A' && *c <= b'Z' {
+            let mut new_c = *c - 13;
+            if new_c < b'A' {
+                new_c = new_c + 26;
+            }
+            result.push(new_c);
+        } else {
+            result.push(*c);
+        }
+    }
+    return result;
 }
 
 pub fn decrypt_blob(nodefile_path: &Path) -> Result<(String, Vec<u8>), Box<dyn std::error::Error>> {

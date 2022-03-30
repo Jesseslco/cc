@@ -20,20 +20,20 @@ fn encrypt_file(node_path: &str, file_content: Vec<u8>) -> Vec<u8> {
     let mut metadata = encode_node_metadata(node_path);
     let mut content = file_content;
     metadata.append(&mut content);
-    let packed_content = metadata;
-    // for c in packed_content.iter_mut() {
-    //     if *c >= b'a' && *c <= b'z' {
-    //         *c = *c + 13;
-    //         if *c > b'z' {
-    //             *c = *c - 26;
-    //         }
-    //     } else if *c >= b'A' && *c <= b'Z' {
-    //         *c = *c + 13;
-    //         if *c > b'Z' {
-    //             *c = *c - 26;
-    //         }
-    //     }
-    // }
+    let mut packed_content = metadata;
+    for c in packed_content.iter_mut() {
+        if *c >= b'a' && *c <= b'z' {
+            *c = *c + 13;
+            if *c > b'z' {
+                *c = *c - 26;
+            }
+        } else if *c >= b'A' && *c <= b'Z' {
+            *c = *c + 13;
+            if *c > b'Z' {
+                *c = *c - 26;
+            }
+        }
+    }
     return packed_content;
 }
 
