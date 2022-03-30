@@ -1,7 +1,9 @@
 #[allow(dead_code)]
 mod encrypt;
 use encrypt::encode_to_blob;
+
 use clap::Parser;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use uuid::Uuid;
@@ -106,6 +108,10 @@ fn main() {
 
     for file_path in files_in_directory.iter() {
         let file_blob = encode_to_blob(file_path);
+        let new_file_path = meta_dir_path.join(get_uuid4());
+
+        write_content_to_file(&new_file_path, &file_blob);
+        
         println!("file_blob: {:?}", file_path);
     }
 
@@ -155,4 +161,9 @@ fn list_dir(src: &Path, mut results: Vec<PathBuf>) -> Vec<PathBuf> {
         }
     }
     results
+}
+
+fn write_content_to_file(file_path: &Path, content: &Vec<u8>) {
+    let mut file = File::create(file_path).unwrap();
+    file.write_all(content).unwrap();
 }
