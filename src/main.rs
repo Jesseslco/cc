@@ -1,6 +1,8 @@
 #[allow(dead_code)]
 mod encrypt;
+mod decrypt;
 use encrypt::encode_to_blob;
+use decrypt::decrypt_blob;
 
 use clap::Parser;
 use std::io::Write;
@@ -31,15 +33,32 @@ fn get_node_tree_path(top_tree_path: &Path, node_path: &Path) -> Option<String>{
 #[clap(author, version, about, long_about = None)]
 struct Args {
     #[clap(short, long)]
+    action: String,
+
+    #[clap(short, long)]
     src: String,
 
     #[clap(short, long)]
     dst: String
 }
 
+#[derive(Debug)]
+struct WtfError(String);
+
+impl std::error::Error for WtfError {
+    fn description(&self) -> &str {
+        &self.0
+    }
+}
+impl std::fmt::Display for WtfError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 fn main() {
     let args = Args::parse();
+    let command = args.action.as_str();
     let src_path = Path::new(&args.src);
     let dst_path = Path::new(&args.dst);
 
@@ -77,71 +96,18 @@ fn main() {
         return;
     }
 
-    // get all file recursively in src directory
-    let files_in_directory: Vec<PathBuf> = Vec::new();
-    let files_in_directory: Vec<PathBuf> = list_dir(&src_path, files_in_directory);
-
-    println!("num of files: {}", files_in_directory.len());
-
-    if files_in_directory.len() == 0 {
-        println!("No files found in source directory");
-        return;
+    match command {
+        "encrypt" => {
+            encrypt_folder(&src_path, &dst_path).expect("failed to encrypt folder");
+        },
+        "decrypt" => {
+            decrypt_folder(&src_path, &dst_path).expect("failed to decrypt folder");
+        },
+        _ => {
+            println!("Unknown command: {}", command);
+        }
     }
 
-
-    // create target directory
-    let target_dir_path = dst_path.join(src_path.file_name().unwrap());
-    if target_dir_path.exists() {
-        println!("Target directory already exists");
-        return;
-    } else {
-        fs::create_dir(&target_dir_path).expect("failed to create target directory");
-    }
-    // create .meta directory
-    let meta_dir_path = target_dir_path.join(".meta");
-    if meta_dir_path.exists() {
-        println!("Meta directory already exists");
-        return;
-    } else {
-        fs::create_dir(&meta_dir_path).expect("failed to create meta directory");
-    }
-
-    for file_path in files_in_directory.iter() {
-        let file_blob = encode_to_blob(file_path);
-        let new_file_path = meta_dir_path.join(get_uuid4());
-
-        write_content_to_file(&new_file_path, &file_blob);
-        
-        println!("file_blob: {:?}", file_path);
-    }
-
-
-    // for every file, encrypt it in to blob, then save it to dst_path
-
-    // // read file
-    // let content = fs::read(&src_path).unwrap();
-    // let encrypt_content: Vec<u8> = encrypt_file("".to_string(), content);
-
-    // // create target folder
-    // let target_dir_path = dst_path.join(&src_path.file_name().unwrap());
-    // if target_dir_path.exists() {
-    //     println!("Target directory already exists");
-    //     return;
-    // } else {
-    //     fs::create_dir(target_dir_path).unwrap();
-    // }
-
-    // // create metafile dir
-    // let metafile_dir = dst_path.join(".meta");
-    // if metafile_dir.exists() {
-    //     println!("Metafile directory already exists");
-    //     return;
-    // } else {
-    //     fs::create_dir(metafile_dir).unwrap();
-    // }
-
-    // if meta
-    // write content to file
 }
 
 
@@ -166,4 +132,83 @@ fn list_dir(src: &Path, mut results: Vec<PathBuf>) -> Vec<PathBuf> {
 fn write_content_to_file(file_path: &Path, content: &Vec<u8>) {
     let mut file = File::create(file_path).unwrap();
     file.write_all(content).unwrap();
+}
+
+fn encrypt_folder(src_path: &Path, dst_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    // get all file recursively in src directory
+    let files_in_directory: Vec<PathBuf> = Vec::new();
+    let files_in_directory: Vec<PathBuf> = list_dir(&src_path, files_in_directory);
+
+    println!("num of files: {}", &files_in_directory.len());
+
+    if files_in_directory.len() == 0 {
+        println!("No files found in source directory");
+        return Err(Box::new(WtfError("No files found in source directory".to_string())));
+    }
+
+
+    // create target directory
+    let target_dir_path = dst_path.join(src_path.file_name().unwrap());
+    if target_dir_path.exists() {
+        println!("Target directory already exists");
+        return Err(Box::new(WtfError("Target directory already exists".to_string())));
+    } else {
+        fs::create_dir(&target_dir_path).expect("failed to create target directory");
+    }
+    // create .meta directory
+    let meta_dir_path = target_dir_path.join(".meta");
+    if meta_dir_path.exists() {
+        println!("Meta directory already exists");
+        return Err(Box::new(WtfError("Meta directory already exists".to_string())));
+    } else {
+        fs::create_dir(&meta_dir_path).expect("failed to create meta directory");
+    }
+
+    for file_path in files_in_directory.iter() {
+        let file_blob = encode_to_blob(file_path);
+        let new_file_path = meta_dir_path.join(get_uuid4());
+
+        write_content_to_file(&new_file_path, &file_blob);
+        
+        println!("file_blob: {:?}", file_path);
+    }
+    Ok(())
+}
+
+fn decrypt_folder(src_path: &Path, dst_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let meta_path = src_path.join(".meta");
+    if !meta_path.exists() {
+        println!("Meta directory does not exist");
+        return Err(Box::new(WtfError("Meta directory does not exist".to_string())));
+    }
+
+    let project_name = src_path.file_name().unwrap().to_str().unwrap();
+    let target_dir_path = dst_path.join(project_name);
+
+    let all_files: Vec<PathBuf> = list_dir(&meta_path, Vec::new());
+
+    for file in all_files.iter() {
+        let (file_path, file_content) = decrypt_blob(file).unwrap();
+
+        // file absolute path
+        let file_path = target_dir_path.join(file_path);
+        println!("target_dir_path: {:?}", &target_dir_path);
+        println!("file_path: {:?}", file_path);
+
+        // create file parent path if not exists
+        if !file_path.parent().unwrap().exists() {
+            fs::create_dir_all(file_path.parent().unwrap()).expect("failed to create file parent directory");
+        }
+        write_content_to_file(&file_path, &file_content);
+    }
+    // let files_in_directory: Vec<PathBuf> = Vec::new();
+    // let files_in_directory: Vec<PathBuf> = list_dir(&src_path, files_in_directory);
+
+    // println!("num of files: {}", &files_in_directory.len());
+
+    // if files_in_directory.len() == 0 {
+    //     println!("No files found in source directory");
+    //     return Err(Box::new(WtfError("No files found in source directory".to_string())));
+    // }
+    Ok(())
 }
