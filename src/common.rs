@@ -5,31 +5,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-/**
- * write vector of bytes to file, override or not
- */
-pub fn write_to_file(
-    file_path: &Path,
-    content: &[u8],
-    override_existing: bool,
-) -> Result<(), Box<dyn Error>> {
-    if file_path.is_file() {
-        if override_existing {
-            let mut file = File::create(file_path)?;
-            file.write_all(content)?
-        } else {
-            // println!("File already exists");
-            // println!("File already exists, use --override to override");
-            return Err(Box::new(CommonError(
-                "File already exists, pass override=true to override".to_string(),
-            )));
-        }
-    } else {
-        let mut file = File::create(file_path)?; // create file
-        file.write_all(content)?;
-    }
-    Ok(())
-}
 
 /**
  * @biref generate a random uuid string

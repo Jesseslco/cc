@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub struct EncryptionChipher {
@@ -35,9 +34,9 @@ pub fn simple_encrypt_string(input: &str) -> Result<String> {
     // TODO: check system type: windows or linux
     let mut str_bytes = input.bytes().collect::<Vec<u8>>();
     for c in str_bytes.iter_mut() {
-        if *c == b'/' || *c == b'\\' {
-            process_path_delimiter(c);
-        }
+        // if *c == b'/' || *c == b'\\' {
+        //     process_path_delimiter(c);
+        // }
 
         if (*c + 3) > 255 as u8 {
             *c = *c + 3 - 255;
@@ -61,53 +60,12 @@ pub fn simpledecrypt_string(input: &str) -> Result<String> {
             *c = *c - 3;
         }
 
-        if *c == b'/' || *c == b'\\' {
-            process_path_delimiter(c);
-        }
+        // if *c == b'/' || *c == b'\\' {
+        //     process_path_delimiter(c);
+        // }
     }
     Ok(String::from_utf8(str_bytes)?)
 }
-
-// fn encode_node_metadata(node_path: &str) -> Vec<u8> {
-//     let mut result: Vec<u8> = Vec::new();
-//     let mut node_path_bytes = node_path.as_bytes().to_vec();
-
-//     let metadata_bytes_length: u8 = node_path_bytes.len() as u8;
-//     println!("metadata_bytes_length: {}", node_path_bytes.len());
-//     println!("metadata_bytes_length: {}", &metadata_bytes_length);
-//     result.push(metadata_bytes_length);
-//     result.append(&mut node_path_bytes);
-//     return result;
-// }
-
-// // use rot-13 algorithm
-// // node path should be based on the src directory
-// fn encrypt_file(node_path: &str, file_content: Vec<u8>) -> Vec<u8> {
-//     let mut metadata = encode_node_metadata(node_path);
-//     let mut content = file_content;
-//     metadata.append(&mut content);
-//     let mut packed_content = metadata;
-//     for c in packed_content.iter_mut() {}
-//     return packed_content;
-// }
-
-// fn get_node_tree_path(top_tree_path: PathBuf, node_path: &PathBuf) -> Option<String> {
-//     let top_tree_path_str = top_tree_path.to_str().unwrap();
-//     let node_path_str = node_path.to_str().unwrap();
-//     if node_path_str.starts_with(top_tree_path_str) {
-//         let node_tree_path_str = node_path_str.replace(top_tree_path_str, "");
-//         return Some(node_tree_path_str);
-//     } else {
-//         None
-//     }
-// }
-
-// pub fn encode_to_blob(file_path: &PathBuf, top_tree_path: PathBuf) -> Vec<u8> {
-//     let file_content: Vec<u8> = fs::read(&file_path).unwrap();
-//     let node_path = get_node_tree_path(top_tree_path, file_path).unwrap();
-//     let encrypted_blob = encrypt_file(&node_path, file_content);
-//     return encrypted_blob;
-// }
 
 pub fn encrypt_byte_rot13(c: &mut u8) -> Result<()> {
     if *c >= b'a' && *c <= b'z' {
@@ -154,14 +112,11 @@ pub fn encrypt_bytes(
     Ok(bytes)
 }
 
-pub fn decrypt_bytes(
-    mut bytes: Vec<u8>,
-    decrypt_method: fn(&mut u8) -> Result<()>,
-) -> Result<Vec<u8>> {
+pub fn decrypt_bytes(bytes: &mut Vec<u8>, decrypt_method: fn(&mut u8) -> Result<()>) -> Result<()> {
     for i in bytes.iter_mut() {
         decrypt_method(i)?;
     }
-    Ok(bytes)
+    Ok(())
 }
 
 #[cfg(test)]
@@ -239,20 +194,8 @@ mod tests {
 
         let c = b"Abdsa///dsa".to_vec();
         let c_copy = c.clone();
-        let encrypted_bytes = encrypt_bytes(c, encrypt_byte_rot13).unwrap();
-        let decrypted_bytes = decrypt_bytes(encrypted_bytes, decrypt_byte_rot_13).unwrap();
-        assert_eq!(c_copy, decrypted_bytes);
+        let mut encrypted_bytes = encrypt_bytes(c, encrypt_byte_rot13).unwrap();
+        decrypt_bytes(&mut encrypted_bytes, decrypt_byte_rot_13).unwrap();
+        assert_eq!(c_copy, encrypted_bytes);
     }
-
-    // #[test]
-    // fn wtf_test() {
-    //     use std::fs;
-    //     let current_dir = fs::canonicalize(".").unwrap();
-    //     let encrypted_file_bytes = fs::read(current_dir.join("tests/encrypted_node_2")).unwrap();
-    //     assert_eq!(encrypted_file_bytes[0], (41 as u8));
-    //     let decrypted_file_bytes = decrypt_bytes(encrypted_file_bytes, decrypt_byte_rot_13).unwrap();
-
-    //     let decrypted_path = String::from_utf8(decrypted_file_bytes[1..=41].to_vec()).unwrap();
-    //     assert_eq!("dsad", &decrypted_path);
-    // }
 }
