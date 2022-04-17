@@ -1,13 +1,14 @@
 // build mod tree
+mod action;
 mod command;
 mod common;
-mod decrypt;
-mod encrypt;
+mod encryption;
 mod error;
 mod node;
 
-use encrypt::{EncryptionChipher, ROT_13_ENCRYPTION_CHIPHER};
+use encryption::{EncryptionChipher, ROT_13_ENCRYPTION_CHIPHER};
 
+use action::encrypt::encrypt_to_box;
 use clap::Parser;
 use std::fs;
 use std::path::Path;
@@ -91,8 +92,10 @@ fn main() {
         }
     };
 
+    let box_path = dst_path.join(src_path.file_name().unwrap());
+
     match command {
-        "encrypt" => {}
+        "encrypt" => encrypt_to_box(&src_path, &box_path).expect("failed to encrypt"),
         "decrypt" => {}
         _ => {
             println!("Command: {} not found", command);

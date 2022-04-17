@@ -1,5 +1,5 @@
 use crate::common::get_uuid4_str;
-use crate::encrypt::EncryptionChipher;
+use crate::encryption::EncryptionChipher;
 use crate::error::CommonError;
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -7,10 +7,12 @@ use std::path::{Path, PathBuf};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+#[derive(Debug)]
 pub enum NodeType {
     File,
     Folder,
 }
+#[derive(Debug)]
 pub struct Node {
     node_path: String,
     content: Vec<u8>,
@@ -72,17 +74,20 @@ impl Node {
         }
     }
 
-    pub fn from_file(file_abs_path: &Path, box_abs_path: &Path) -> Result<Node> {
-        let node_path = file_abs_path.strip_prefix(box_abs_path).unwrap().to_str();
+    pub fn from_file(file_abs_path: &Path, project_abs_path: &Path) -> Result<Node> {
+        println!("{}", file_abs_path.to_str().unwrap());
+        println!("{}", project_abs_path.to_str().unwrap());
+        let node_path = file_abs_path
+            .strip_prefix(project_abs_path)
+            .unwrap()
+            .to_str()
+            .unwrap();
         let node_type = if fs::metadata(file_abs_path)?.is_dir() {
             NodeType::Folder
         } else {
             NodeType::File
         };
 
-        if let None = node_path {
-            return Err(Box::new(CommonError::new("invalid node file path")));
-        }
         let content = match node_type {
             NodeType::File => {
                 let content = fs::read(file_abs_path)?;
@@ -91,7 +96,7 @@ impl Node {
             NodeType::Folder => Vec::new(),
         };
         Ok(Node {
-            node_path: node_path.unwrap().to_string(),
+            node_path: node_path.to_string(),
             content,
             node_type,
         })
@@ -183,7 +188,7 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::encrypt::ROT_13_ENCRYPTION_CHIPHER;
+    use crate::encryption::ROT_13_ENCRYPTION_CHIPHER;
 
     #[test]
     fn test_node_from_encrypted_file() {

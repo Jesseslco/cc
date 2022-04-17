@@ -5,9 +5,8 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-
 /**
- * @biref generate a random uuid string
+ * biref generate a random uuid string
  */
 pub fn get_uuid4_str() -> String {
     let uuid = Uuid::new_v4();
