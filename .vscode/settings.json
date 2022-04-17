@@ -22,5 +22,4 @@
     "editor.defaultFormatter": "matklad.rust-analyzer"
     // "editor.defaultFormatter": "rust-lang.rust",
   },
-
 }

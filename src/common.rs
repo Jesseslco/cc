@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 /**
- * biref generate a random uuid string
+ * generate a random uuid string
  */
 pub fn get_uuid4_str() -> String {
     let uuid = Uuid::new_v4();
@@ -14,9 +14,9 @@ pub fn get_uuid4_str() -> String {
 }
 
 /**
-* @brief get file or directory path recrusively from a path
+ * get file or directory path recrusively from a path recrusively get all file
+ * path in a directory
  */
-// recrusively get all file path in a directory
 pub fn listdir(src_dir: &Path, if_recrusive: bool) -> Result<Vec<PathBuf>, Box<dyn Error>> {
     let mut files_or_dirs_in_directory: Vec<PathBuf> = Vec::new();
 
@@ -36,7 +36,6 @@ pub fn listdir(src_dir: &Path, if_recrusive: bool) -> Result<Vec<PathBuf>, Box<d
     Ok(files_or_dirs_in_directory)
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     #[test]

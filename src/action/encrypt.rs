@@ -25,7 +25,9 @@ pub fn encrypt_to_box(project_path: &Path, box_path: &Path) -> Result<()> {
 
     for file_or_dir_abs_path in files.iter() {
         let node = Node::from_file(&file_or_dir_abs_path, &project_path)?;
-        println!("node: {:?}", &node);
+
+        node.save(box_abs_path)?;
+        println!("done");
     }
     Ok(())
 }

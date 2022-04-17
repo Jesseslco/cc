@@ -92,10 +92,11 @@ fn main() {
         }
     };
 
-    let box_path = dst_path.join(src_path.file_name().unwrap());
-
     match command {
-        "encrypt" => encrypt_to_box(&src_path, &box_path).expect("failed to encrypt"),
+        "encrypt" => {
+            let box_path = dst_path.join(src_path.file_name().unwrap());
+            encrypt_to_box(&src_path, &box_path).expect("failed to encrypt")
+        }
         "decrypt" => {}
         _ => {
             println!("Command: {} not found", command);
